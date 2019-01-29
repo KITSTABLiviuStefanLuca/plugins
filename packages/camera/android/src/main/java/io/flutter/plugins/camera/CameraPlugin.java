@@ -715,46 +715,48 @@ public class CameraPlugin implements MethodCallHandler {
     }
 
     private void startPreview() throws CameraAccessException {
-      closeCaptureSession();
+      try {
+        closeCaptureSession();
 
-      SurfaceTexture surfaceTexture = textureEntry.surfaceTexture();
-      surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
-      captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+        SurfaceTexture surfaceTexture = textureEntry.surfaceTexture();
+        surfaceTexture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
+        captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 
-      List<Surface> surfaces = new ArrayList<>();
+        List<Surface> surfaces = new ArrayList<>();
 
-      Surface previewSurface = new Surface(surfaceTexture);
-      surfaces.add(previewSurface);
-      captureRequestBuilder.addTarget(previewSurface);
+        Surface previewSurface = new Surface(surfaceTexture);
+        surfaces.add(previewSurface);
+        captureRequestBuilder.addTarget(previewSurface);
 
-      surfaces.add(pictureImageReader.getSurface());
+        surfaces.add(pictureImageReader.getSurface());
 
-      cameraDevice.createCaptureSession(
-          surfaces,
-          new CameraCaptureSession.StateCallback() {
+        cameraDevice.createCaptureSession(
+                surfaces,
+                new CameraCaptureSession.StateCallback() {
 
-            @Override
-            public void onConfigured(@NonNull CameraCaptureSession session) {
-              if (cameraDevice == null) {
-                sendErrorEvent("The camera was closed during configuration.");
-                return;
-              }
-              try {
-                cameraCaptureSession = session;
-                captureRequestBuilder.set(
-                    CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
-                cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
-              } catch (CameraAccessException e) {
-                sendErrorEvent(e.getMessage());
-              }
-            }
+                  @Override
+                  public void onConfigured(@NonNull CameraCaptureSession session) {
+                    if (cameraDevice == null) {
+                      sendErrorEvent("The camera was closed during configuration.");
+                      return;
+                    }
+                    try {
+                      cameraCaptureSession = session;
+                      captureRequestBuilder.set(
+                              CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+                      cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+                    } catch (CameraAccessException e) {
+                      sendErrorEvent(e.getMessage());
+                    }
+                  }
 
-            @Override
-            public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-              sendErrorEvent("Failed to configure the camera for preview.");
-            }
-          },
-          null);
+                  @Override
+                  public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+                    sendErrorEvent("Failed to configure the camera for preview.");
+                  }
+                },
+                null);
+      } catch (Exception e) { }
     }
 
     private void startPreviewWithImageStream() throws CameraAccessException {
